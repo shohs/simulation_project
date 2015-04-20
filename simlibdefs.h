@@ -26,6 +26,7 @@
 /* Define some other values. */
 
 #define LIST_EVENT  25      /* Event list number. */
+#undef INFINITY
 #define INFINITY     1.E30  /* Not really infinity, but a very large number. */
 
 /* Pre-define attribute numbers of transfer for event list. */
