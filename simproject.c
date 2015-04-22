@@ -1,8 +1,16 @@
-#include <stdio.h>
-
+/* Required for the use of simlib.c */
+#include <stdarg.h>
 #include "simlib.h"
 
+#include <stdio.h>
+
+/* Event types */
+#define EVENT_GLOBAL_ARRIVAL    1
+#define EVENT_HOTSPOT_ARRIVAL   2
+#define EVENT DEPARTURE         3
+
 typedef struct HotSpot {
+  int id;
   double base_strength;
   double interarrival_time;
   double stay_time;
@@ -17,7 +25,6 @@ int num_hotspots = 1;
 int x_size, y_size;
 double min_connection_strength = 0.1;
 HotSpot hotspots[MAX_NUM_HOTSPOTS];
-
 
 void initial_setup()
 {
