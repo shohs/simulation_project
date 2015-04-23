@@ -2,3 +2,9 @@ Use simlib
 Load the data from a file
 Figure the file format
 Write the results to file(s)
+Graphs
+
+
+To write in the report:
+Create some input / systems + pictures
+Map of campus for last system

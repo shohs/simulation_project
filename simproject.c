@@ -1,6 +1,9 @@
+#include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "simlib.h"
+
 
 typedef struct HotSpot {
   double base_strength;
@@ -11,11 +14,16 @@ typedef struct HotSpot {
   int current_users;
 } HotSpot;
 
+
+FILE *infile = NULL, *outfile = NULL;
+
 #define MAX_NUM_HOTSPOTS 100
 #define STRENGTH_COEFFICIENT 1.0
 int num_hotspots = 1;
 int x_size, y_size;
 double min_connection_strength = 0.1;
+double global_interarrival;
+double global_connection_time;
 HotSpot hotspots[MAX_NUM_HOTSPOTS];
 
 
@@ -90,11 +98,64 @@ void user_leaving_handler(int hotspot_id)
 
 void cleanup()
 {
+  if (infile) {
+    fclose(infile);
+  }
 
+  if (outfile) {
+    fclose(outfile);
+  }
+}
+
+
+void cleanup_on_error(const char *message)
+{
+  fprintf(stderr, "%s\n", message);
+
+  cleanup();
+
+  exit(1);
+}
+
+
+void readFile()
+{
+  int i;
+
+  infile = fopen("wifi.in", "r");
+  if (!infile) {
+    cleanup_on_error("Unable to open \"wifi.in\"\n");
+  }
+
+  outfile = fopen("wifi.out", "w");
+  if (!outfile) {
+    cleanup_on_error("Unable to open \"wifi.out\"\n");
+  }
+
+  if (fscanf(infile, "%d %d %d %lf %lf", &x_size, &y_size, &num_hotspots, &global_interarrival, &global_connection_time) != 5) {
+    cleanup_on_error("Error reading input file!");
+  }
+
+  if (num_hotspots > MAX_NUM_HOTSPOTS) {
+    num_hotspots = MAX_NUM_HOTSPOTS;
+  }
+
+  for (i = 0; i < num_hotspots; i++) {
+    HotSpot *h = &hotspots[i];
+    if (fscanf(infile, "%lf %lf %lf %lf %lf %d", &h->x, &h->y, &h->base_strength, &h->interarrival_time, &h->stay_time, &h->capacity) != 6) {
+      cleanup_on_error("Error reading input file!");
+    }
+  }
+
+  if (fprintf(outfile, "Simulation Output:\n") < 0) {
+    cleanup_on_error("Error writing to output file!");
+  }
 }
 
 
 int main()
 {
-  printf("test\n");
+  readFile();
+
+  cleanup();
 }
