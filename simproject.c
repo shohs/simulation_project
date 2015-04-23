@@ -9,7 +9,7 @@
 /* Event types */
 #define EVENT_GLOBAL_ARRIVAL    1
 #define EVENT_HOTSPOT_ARRIVAL   2
-#define EVENT DEPARTURE         3
+#define EVENT_DEPARTURE         3
 
 
 typedef struct HotSpot {
