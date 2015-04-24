@@ -2,6 +2,8 @@ Debug/*
 *.vcxproj.*
 *.vcxproj
 *.swp
+*.dSYM/*
+simproject
 
 # Object files
 *.o

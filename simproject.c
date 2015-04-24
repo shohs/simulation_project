@@ -34,6 +34,20 @@ double global_interarrival;
 double global_connection_time;
 HotSpot hotspots[MAX_NUM_HOTSPOTS];
 
+void print_all_hotspots();
+void print_hotspot(struct HotSpot);
+
+void print_all_hotspots() {
+    for (int i = 0; i < num_hotspots; i++) {
+        print_hotspot(hotspots[i]); 
+    }
+}
+
+void print_hotspot(struct HotSpot hotspot) {
+    printf("id: %i, base strength: %d \n",
+            hotspot.id, hotspot.base_strength);
+}
+
 void initial_setup()
 {
   int h;
@@ -139,6 +153,7 @@ void readFile()
     cleanup_on_error("Unable to open \"wifi.out\"\n");
   }
 
+  /* Read in global simulation configuration parameters */
   if (fscanf(infile, "%d %d %d %lf %lf", &x_size, &y_size, &num_hotspots, &global_interarrival, &global_connection_time) != 5) {
     cleanup_on_error("Error reading input file!");
   }
@@ -147,8 +162,10 @@ void readFile()
     num_hotspots = MAX_NUM_HOTSPOTS;
   }
 
+  /* Read in configuration paramters for each hotspot */
   for (i = 0; i < num_hotspots; i++) {
     HotSpot *h = &hotspots[i];
+    h->id = i + 1;
     if (fscanf(infile, "%lf %lf %lf %lf %lf %d", &h->x, &h->y, &h->base_strength, &h->interarrival_time, &h->stay_time, &h->capacity) != 6) {
       cleanup_on_error("Error reading input file!");
     }
@@ -159,10 +176,13 @@ void readFile()
   }
 }
 
-
 int main()
 {
   readFile();
 
+  print_all_hotspots();
+
   cleanup();
+
+  return 0;
 }
