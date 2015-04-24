@@ -1,6 +1,7 @@
 Debug/*
 *.vcxproj.*
 *.vcxproj
+*.swp
 
 # Object files
 *.o
