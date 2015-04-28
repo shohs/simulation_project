@@ -1,3 +1,10 @@
+/****************************************************
+ * Simulating Traffic on a mult-hotspot WiFi Network
+ *
+ * CS 480 - Steven Hohs, Tarif Haque, Lauren Wood
+ * Final Project
+ ***************************************************/
+
 /* Required for the use of simlib.c */
 #include <stdlib.h>
 #include <stdarg.h>
@@ -34,8 +41,15 @@ double global_interarrival;
 double global_connection_time;
 HotSpot hotspots[MAX_NUM_HOTSPOTS];
 
+/* Non sim-lib prototypes */
 void print_all_hotspots();
 void print_hotspot(struct HotSpot);
+int getStream(int);
+
+/* Get the random event stream ID for a given hotspot */
+int getStream(int hotspotID) {
+    return hotspotID + 2;
+}
 
 void print_all_hotspots() {
     for (int i = 0; i < num_hotspots; i++) {
@@ -44,15 +58,17 @@ void print_all_hotspots() {
 }
 
 void print_hotspot(struct HotSpot hotspot) {
-    printf("id: %i, base strength: %d \n",
+    printf("id: %i, base strength: %d \n,  ",
             hotspot.id, hotspot.base_strength);
 }
 
 void initial_setup()
 {
   int h;
+
+  /* Schedule the first user arrival for each hotspot */
   for (h = 0; h < num_hotspots; h++) {
-    // Schedule an arrival event near hotspot h
+    event_schedule(sim_time + expon(hotspots[i].interarrival_time, getStream(hotspots[i].id), EVENT_HOTSPOT_ARRIVAL);   
   }
 
   // Schedule a global arrival event at random (x, y)
