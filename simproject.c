@@ -17,7 +17,15 @@
 #define EVENT_GLOBAL_ARRIVAL    1
 #define EVENT_HOTSPOT_ARRIVAL   2
 #define EVENT_DEPARTURE         3
+#define EVENT_END_SIMULATION    4
 
+#define STREAM_GLOBAL 1
+#define STREAM_DEPARTURE 2
+#define STREAM_COORDINATE_GENERATION 3
+
+#define HOTSPOT_ID 3
+#define ARRIVAL_X  4
+#define ARRIVAL_Y  5
 
 typedef struct HotSpot {
   int id;
@@ -29,11 +37,17 @@ typedef struct HotSpot {
   int current_users;
 } HotSpot;
 
+typedef struct Point {
+   double x;
+   double y;
+}
 
 FILE *infile = NULL, *outfile = NULL;
 
 #define MAX_NUM_HOTSPOTS 100
 #define STRENGTH_COEFFICIENT 1.0
+#define TOTAL_SIMULATION_TIME 1000000
+
 int num_hotspots = 1;
 int x_size, y_size;
 double min_connection_strength = 0.1;
@@ -71,10 +85,22 @@ void initial_setup()
     event_schedule(sim_time + expon(hotspots[i].interarrival_time, getStream(hotspots[i].id), EVENT_HOTSPOT_ARRIVAL);   
   }
 
-  // Schedule a global arrival event at random (x, y)
-  // Schedule the End_Simulation event
+  /* Schedule a global arrival event at random (x, y) */
+  event_schedule(sim_time + expon(global_interarrival, STREAM_GLOBAL), EVENT_GLOBAL_ARRIVAL);    
+
+  /* Schedule the end_simulation event */
+  event_schedule(TOTAL_SIMULATION_TIME, EVENT_END_SIMULATION);
+  
 }
 
+point generate_random_coordinate() {
+    point.x = uniform(0, x_size, STREAM_COORDINATE_GENERATION);
+    point.y = uniform(0, y_size, STREAM_COORDINATE_GENERATION);
+}
+
+point generate_coordinate_near_hotspot(int id) {
+
+}
 
 double connection_strength(HotSpot *hotspot, double x, double y)
 {
