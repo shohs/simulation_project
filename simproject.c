@@ -146,7 +146,7 @@ double connection_strength(HotSpot *hotspot, double x, double y)
     dy = y - hotspot->y;
     distance = dx * dx + dy * dy;
     if (distance < 1.0) {
-        // Prevent the strength approaching infinity as distance approaches 0
+        /* Prevent the strength approaching infinity as distance approaches 0 */
         return STRENGTH_COEFFICIENT * hotspot->base_strength;
     } else {
         return STRENGTH_COEFFICIENT * hotspot->base_strength / distance;
@@ -172,22 +172,22 @@ int user_connection(double x, double y)
     StrengthIdPair hotspotStrengths[MAX_NUM_HOTSPOTS];
     int h;
     
-    // Calculate the strengths at (x, y)
+    /* Calculate the strengths at (x, y) */
     for (h = 0; h < num_hotspots; h++) {
         StrengthIdPair *pair = &strengths[h];
         pair->id = h;
         pair->strength = connection_strength(&hotspots[h], x, y);
     }
 
-    // Sort the StrengthIdPairs in ascending order
+    /* Sort the StrengthIdPairs in ascending order */
     qsort(strengths, num_hotspots, sizeof(*strengths), &strengthIdComparator);
 
-    // Iterate over the hotspots in order of descending strength
+    /* Iterate over the hotspots in order of descending strength */
     for (h = num_hotspots - 1; h >= 0; h--) {
         int id = strengths[h].id;
 
         if (strengths[h].strength < min_connection_strength) {
-            return -1; // Signifying a failure to connect to the network
+            return -1; /* Signifying a failure to connect to the network */
         } else if (hotspots[id].current_users < hotspots[id].capacity) {
             HotSpot *h = &hotspots[id];
             ++h->current_users;
