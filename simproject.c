@@ -28,6 +28,8 @@
 #define ARRIVAL_X  4
 #define ARRIVAL_Y  5
 
+#define MATH_PI 3.14159265358979323846 
+
 typedef struct HotSpot {
     int id;
     double base_strength;
@@ -70,7 +72,7 @@ int getStream(int);
 
 /* Get the random event stream ID for a given hotspot */
 int getStream(int hotspotID) {
-    return hotspotID + 2;
+    return hotspotID + 3;
 }
 
 
@@ -209,6 +211,11 @@ void global_user_arrival_handler(double x, double y)
     connected_id = user_connection(x, y);
 }
 
+void local_user_arrival_handler(int hotspot_id, double x, double y) 
+{
+  
+}
+
 
 void user_leaving_handler(int hotspot_id)
 {
@@ -277,11 +284,36 @@ void readFile()
 
 int main()
 {
-    readFile();
+  readFile();
 
-    print_all_hotspots();
+  // print_all_hotspots();
+  initial_setup():
 
-    cleanup();
+  maxatr = 6; 
 
-    return 0;
+  while (!event_list_empty) {
+
+    switch(next_event_type) {
+        case EVENT_GLOBAL_ARRIVAL:
+          global_user_arrival_handler(transfer[X_ARRIVAL], transfer[Y_ARRIVAL]);
+          break;
+
+        case EVENT_HOTSPOT_ARRIVAL:
+          local_user_arrival_handler(transfer[HOTSPOT_ID], transfer[X_ARRIVAL], transfer[Y_ARRIVAL]);
+          break;
+
+        case EVENT_DEPARTURE:
+            user_leaving_handler(transfer[HOTSPOT_ID]);
+            break;
+
+        case EVENT_END_SIMULATION:
+            end_simulation();
+            break;
+    }
+
+  }
+
+  cleanup();
+
+  return 0;
 }
