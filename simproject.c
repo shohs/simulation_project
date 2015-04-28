@@ -8,6 +8,7 @@
 /* Required for the use of simlib.c */
 #include <stdlib.h>
 #include <stdarg.h>
+#include <math.h>
 #include "simlib.h"
 
 #include <stdio.h>
@@ -28,24 +29,31 @@
 #define ARRIVAL_Y  5
 
 typedef struct HotSpot {
-  int id;
-  double base_strength;
-  double interarrival_time;
-  double stay_time;
-  double x, y;
-  int capacity;
-  int current_users;
+    int id;
+    double base_strength;
+    double interarrival_time;
+    double stay_time;
+    double x, y;
+    int capacity;
+    int current_users;
 } HotSpot;
 
 typedef struct Point {
-   double x;
-   double y;
-}
+     double x;
+     double y;
+} Point;
+
+typedef struct StrengthIdPair {
+    double strength;
+    int id;
+} StrengthIdPair;
+
 
 FILE *infile = NULL, *outfile = NULL;
 
 #define MAX_NUM_HOTSPOTS 100
 #define STRENGTH_COEFFICIENT 1.0
+#define NEAR_RADIUS 25.0f /* Make this based on strength */
 #define TOTAL_SIMULATION_TIME 1000000
 
 int num_hotspots = 1;
@@ -65,166 +73,215 @@ int getStream(int hotspotID) {
     return hotspotID + 2;
 }
 
+
 void print_all_hotspots() {
     for (int i = 0; i < num_hotspots; i++) {
         print_hotspot(hotspots[i]); 
     }
 }
 
+
 void print_hotspot(struct HotSpot hotspot) {
     printf("id: %i, base strength: %d \n,  ",
             hotspot.id, hotspot.base_strength);
 }
 
-void initial_setup()
+
+bool event_list_empty()
 {
-  int h;
-
-  /* Schedule the first user arrival for each hotspot */
-  for (h = 0; h < num_hotspots; h++) {
-    event_schedule(sim_time + expon(hotspots[i].interarrival_time, getStream(hotspots[i].id), EVENT_HOTSPOT_ARRIVAL);   
-  }
-
-  /* Schedule a global arrival event at random (x, y) */
-  event_schedule(sim_time + expon(global_interarrival, STREAM_GLOBAL), EVENT_GLOBAL_ARRIVAL);    
-
-  /* Schedule the end_simulation event */
-  event_schedule(TOTAL_SIMULATION_TIME, EVENT_END_SIMULATION);
-  
+    return list_size[LIST_EVENT] > 0;
 }
 
-point generate_random_coordinate() {
+
+Point generate_random_coordinate() {
+    Point point;
     point.x = uniform(0, x_size, STREAM_COORDINATE_GENERATION);
     point.y = uniform(0, y_size, STREAM_COORDINATE_GENERATION);
+    return point;
 }
 
-point generate_coordinate_near_hotspot(int id) {
 
+Point generate_coordinate_near_hotspot(int id) {
+    Point point;
+    HotSpot h = &hotspots[id];
+
+    float theta = uniform(0.0f, 2 * MATH_PI, STREAM_COORDINATE_GENERATION);
+    float radius = uniform(0.0f, NEAR_RADIUS, STREAM_COORDINATE_GENERATION);
+    point.x = h->x + radius * cos(theta);
+    point.y = h->y + radius * sin(theta);
+    return point;
 }
+
+
+void initial_setup()
+{
+    int h;
+    Point p;
+
+    /* Schedule the first user arrival for each hotspot */
+    for (h = 0; h < num_hotspots; h++) {
+        p = generate_coordinate_near_hotspot(h);
+        transfer[ARRIVAL_X] = p.x;
+        transfer[ARRIVAL_Y] = p.y;
+        transfer[HOTSPOT_ID] = h;
+        event_schedule(sim_time + expon(hotspots[i].interarrival_time, getStream(hotspots[i].id), EVENT_HOTSPOT_ARRIVAL);   
+    }
+
+    /* Schedule a global arrival event at random (x, y) */
+    p = generate_random_coordinate();
+    transfer[ARRIVAL_X] = p.x;
+    transfer[ARRIVAL_Y] = p.y;
+    event_schedule(sim_time + expon(global_interarrival, STREAM_GLOBAL), EVENT_GLOBAL_ARRIVAL);    
+
+    /* Schedule the end_simulation event */
+    event_schedule(TOTAL_SIMULATION_TIME, EVENT_END_SIMULATION);
+    
+}
+
 
 double connection_strength(HotSpot *hotspot, double x, double y)
 {
-  double dx, dy, distance;
-  dx = x - hotspot->x;
-  dy = y - hotspot->y;
-  distance = dx * dx + dy * dy;
-  if (distance < 1) {
-    // Prevent the strength approaching infinity as distance approaches 0
-    return STRENGTH_COEFFICIENT * hotspot->base_strength;
-  } else {
-    return STRENGTH_COEFFICIENT * hotspot->base_strength / distance;
-  }
+    double dx, dy, distance;
+    dx = x - hotspot->x;
+    dy = y - hotspot->y;
+    distance = dx * dx + dy * dy;
+    if (distance < 1.0) {
+        // Prevent the strength approaching infinity as distance approaches 0
+        return STRENGTH_COEFFICIENT * hotspot->base_strength;
+    } else {
+        return STRENGTH_COEFFICIENT * hotspot->base_strength / distance;
+    }
+}
+
+
+int strengthIdComparator(void *lhs, void *rhs)
+{
+    StrenthIdPair *lPair = lhs, *rPair = rhs;
+    if (lPair->strength < rPair->strength) {
+        return -1;
+    } else if (lPair->strength > rPair->strength) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 
 int user_connection(double x, double y)
 {
-  double strengths[MAX_NUM_HOTSPOTS];
-  int h;
-  
-  // Calculate the strengths at (x, y)
-  for (h = 0; h < num_hotspots; h++) {
-    strengths[h] = connection_strength(&hotspots[h], x, y);
-  }
-
-  while (1) {
-    int hotspot_id = -1;
-
-    // Find the hotspot with the next highest signal strength at (x, y)
-
-    if (hotspot_id == -1 || strengths[hotspot_id] < min_connection_strength) {
-      return -1; // Signifying a failure to connect to the network
-    } else if (hotspots[hotspot_id].current_users < hotspots[hotspot_id].capacity) {
-      HotSpot *h = &hotspots[hotspot_id];
-      ++h->current_users;
-
-      // Schedule a user leaving event for hotspot at hotspot_id
+    StrengthIdPair hotspotStrengths[MAX_NUM_HOTSPOTS];
+    int h;
+    
+    // Calculate the strengths at (x, y)
+    for (h = 0; h < num_hotspots; h++) {
+        StrengthIdPair *pair = &strengths[h];
+        pair->id = h;
+        pair->strength = connection_strength(&hotspots[h], x, y);
     }
-  }
+
+    // Sort the StrengthIdPairs in ascending order
+    qsort(strengths, num_hotspots, sizeof(*strengths), &strengthIdComparator);
+
+    // Iterate over the hotspots in order of descending strength
+    for (h = num_hotspots - 1; h >= 0; h--) {
+        int id = strengths[h].id;
+
+        if (strengths[h].strength < min_connection_strength) {
+            return -1; // Signifying a failure to connect to the network
+        } else if (hotspots[id].current_users < hotspots[id].capacity) {
+            HotSpot *h = &hotspots[id];
+            ++h->current_users;
+
+            transfer[HOTSPOT_ID] = id;
+            event_schedule(sim_time + expon(hotspots[id].stay_time, STREAM_DEPARTURE), EVENT_DEPARTURE); 
+        }
+    }
+
+    return -1;
 }
 
 
 void global_user_arrival_handler(double x, double y)
 {
-  int connected_id;
-  // get (x, y)
-  // Schedule another user arrival event globally
-  connected_id = user_connection(x, y);
+    int connected_id;
+    // get (x, y)
+    // Schedule another user arrival event globally
+    connected_id = user_connection(x, y);
 }
 
 
 void user_leaving_handler(int hotspot_id)
 {
-  --hotspots[hotspot_id].current_users;
+    --hotspots[hotspot_id].current_users;
 }
 
 
 void cleanup()
 {
-  if (infile) {
-    fclose(infile);
-  }
+    if (infile) {
+        fclose(infile);
+    }
 
-  if (outfile) {
-    fclose(outfile);
-  }
+    if (outfile) {
+        fclose(outfile);
+    }
 }
 
 
 void cleanup_on_error(const char *message)
 {
-  fprintf(stderr, "%s\n", message);
+    fprintf(stderr, "%s\n", message);
 
-  cleanup();
+    cleanup();
 
-  exit(1);
+    exit(1);
 }
 
 
 void readFile()
 {
-  int i;
+    int i;
 
-  infile = fopen("wifi.in", "r");
-  if (!infile) {
-    cleanup_on_error("Unable to open \"wifi.in\"\n");
-  }
-
-  outfile = fopen("wifi.out", "w");
-  if (!outfile) {
-    cleanup_on_error("Unable to open \"wifi.out\"\n");
-  }
-
-  /* Read in global simulation configuration parameters */
-  if (fscanf(infile, "%d %d %d %lf %lf", &x_size, &y_size, &num_hotspots, &global_interarrival, &global_connection_time) != 5) {
-    cleanup_on_error("Error reading input file!");
-  }
-
-  if (num_hotspots > MAX_NUM_HOTSPOTS) {
-    num_hotspots = MAX_NUM_HOTSPOTS;
-  }
-
-  /* Read in configuration paramters for each hotspot */
-  for (i = 0; i < num_hotspots; i++) {
-    HotSpot *h = &hotspots[i];
-    h->id = i + 1;
-    if (fscanf(infile, "%lf %lf %lf %lf %lf %d", &h->x, &h->y, &h->base_strength, &h->interarrival_time, &h->stay_time, &h->capacity) != 6) {
-      cleanup_on_error("Error reading input file!");
+    infile = fopen("wifi.in", "r");
+    if (!infile) {
+        cleanup_on_error("Unable to open \"wifi.in\"\n");
     }
-  }
 
-  if (fprintf(outfile, "Simulation Output:\n") < 0) {
-    cleanup_on_error("Error writing to output file!");
-  }
+    outfile = fopen("wifi.out", "w");
+    if (!outfile) {
+        cleanup_on_error("Unable to open \"wifi.out\"\n");
+    }
+
+    /* Read in global simulation configuration parameters */
+    if (fscanf(infile, "%d %d %d %lf %lf", &x_size, &y_size, &num_hotspots, &global_interarrival, &global_connection_time) != 5) {
+        cleanup_on_error("Error reading input file!");
+    }
+
+    if (num_hotspots > MAX_NUM_HOTSPOTS) {
+        num_hotspots = MAX_NUM_HOTSPOTS;
+    }
+
+    /* Read in configuration paramters for each hotspot */
+    for (i = 0; i < num_hotspots; i++) {
+        HotSpot *h = &hotspots[i];
+        h->id = i + 1;
+        if (fscanf(infile, "%lf %lf %lf %lf %lf %d", &h->x, &h->y, &h->base_strength, &h->interarrival_time, &h->stay_time, &h->capacity) != 6) {
+            cleanup_on_error("Error reading input file!");
+        }
+    }
+
+    if (fprintf(outfile, "Simulation Output:\n") < 0) {
+        cleanup_on_error("Error writing to output file!");
+    }
 }
 
 int main()
 {
-  readFile();
+    readFile();
 
-  print_all_hotspots();
+    print_all_hotspots();
 
-  cleanup();
+    cleanup();
 
-  return 0;
+    return 0;
 }
