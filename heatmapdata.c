@@ -12,7 +12,7 @@ unsigned int convert_2d_index(unsigned int x, unsigned int y)
 }
 
 
-void allocate_connection_table(unsigned int max_x, unsigned int max_y)
+bool allocate_connection_table(unsigned int max_x, unsigned int max_y)
 {
     size_x = max_x;
     size_y = max_y;
@@ -27,6 +27,12 @@ void allocate_connection_table(unsigned int max_x, unsigned int max_y)
 
     connected = calloc(size_x * size_y, sizeof(unsigned int));
     attempted = calloc(size_x * size_y, sizeof(unsigned int));
+
+    if (!connected || !attempted)
+    {
+        return false;
+    }
+    return true;
 }
 
 
