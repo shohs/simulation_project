@@ -1,9 +1,9 @@
-/****************************************************
- * Simulating Traffic on a mult-hotspot WiFi Network
- *
- * CS 480 - Steven Hohs, Tarif Haque, Lauren Wood
- * Final Project
- ***************************************************/
+/******************************************************
+ * Simulating Traffic on a mult-hotspot WiFi Network  *
+ *                                                    *
+ * CS 480/580 - Steven Hohs, Tarif Haque, Lauren Wood *
+ * Final Project                                      *
+ ******************************************************/
 
 /* Required for the use of simlib.c */
 #include <stdlib.h>
@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include "heatmapdata.h"
 
 /* Event types */
 #define EVENT_GLOBAL_ARRIVAL    1
@@ -56,7 +57,7 @@ FILE *infile = NULL, *outfile = NULL;
 #define MAX_NUM_HOTSPOTS 100
 #define STRENGTH_COEFFICIENT 1.0
 #define NEAR_RADIUS 25.0f /* Make this based on strength */
-#define TOTAL_SIMULATION_TIME 1000000
+#define TOTAL_SIMULATION_TIME 100000
 
 int num_hotspots = 1;
 int x_size, y_size;
@@ -65,25 +66,32 @@ double global_interarrival;
 double global_connection_time;
 HotSpot hotspots[MAX_NUM_HOTSPOTS];
 
+int successful_connections, attempted_connections;
+
 /* Non sim-lib prototypes */
 void print_all_hotspots();
 void print_hotspot(struct HotSpot);
 int getStream(int);
+void cleanup();
+void cleanup_on_error(const char*);
 
 /* Get the random event stream ID for a given hotspot */
-int getStream(int hotspotID) {
+int getStream(int hotspotID) 
+{
     return hotspotID + 3;
 }
 
 
-void print_all_hotspots() {
+void print_all_hotspots() 
+{
     for (int i = 0; i < num_hotspots; i++) {
         print_hotspot(hotspots[i]); 
     }
 }
 
 
-void print_hotspot(struct HotSpot hotspot) {
+void print_hotspot(struct HotSpot hotspot) 
+{
     printf("id: %i, base strength: %d \n,  ",
             hotspot.id, hotspot.base_strength);
 }
@@ -91,11 +99,12 @@ void print_hotspot(struct HotSpot hotspot) {
 
 bool event_list_empty()
 {
-    return list_size[LIST_EVENT] > 0;
+    return list_size[LIST_EVENT] <= 0;
 }
 
 
-Point generate_random_coordinate() {
+Point generate_random_coordinate() 
+{
     Point point;
     point.x = uniform(0, x_size, STREAM_COORDINATE_GENERATION);
     point.y = uniform(0, y_size, STREAM_COORDINATE_GENERATION);
@@ -103,14 +112,30 @@ Point generate_random_coordinate() {
 }
 
 
-Point generate_coordinate_near_hotspot(int id) {
+Point generate_coordinate_near_hotspot(int id) 
+{
     Point point;
-    HotSpot *h = &hotspots[id];
+    HotSpot *h;
+    --id;
+    h = &hotspots[id];
 
     float theta = uniform(0.0f, 2 * MATH_PI, STREAM_COORDINATE_GENERATION);
     float radius = uniform(0.0f, NEAR_RADIUS, STREAM_COORDINATE_GENERATION);
     point.x = h->x + radius * cos(theta);
     point.y = h->y + radius * sin(theta);
+
+    if (point.x < 0) {
+        point.x = 0;
+    } else if (point.x >= x_size) {
+        point.x = x_size - 0.1;
+    }
+
+    if (point.y < 0) {
+        point.y = 0;
+    } else if (point.y >= y_size) {
+        point.y = y_size - 0.1;
+    }
+
     return point;
 }
 
@@ -120,9 +145,18 @@ void initial_setup()
     int h;
     Point p;
 
+    successful_connections = 0;
+    attempted_connections = 0;
+
+    init_simlib();
+
+    if (!allocate_connection_table(x_size, y_size)) {
+        cleanup_on_error("Unable to allocate data table!");
+    }
+
     /* Schedule the first user arrival for each hotspot */
     for (h = 0; h < num_hotspots; h++) {
-        p = generate_coordinate_near_hotspot(h);
+        p = generate_coordinate_near_hotspot(hotspots[h].id);
         transfer[ARRIVAL_X] = p.x;
         transfer[ARRIVAL_Y] = p.y;
         transfer[HOTSPOT_ID] = hotspots[h].id;
@@ -177,7 +211,7 @@ int user_connection(double x, double y)
     /* Calculate the strengths at (x, y) */
     for (h = 0; h < num_hotspots; h++) {
         StrengthIdPair *pair = &strengths[h];
-        pair->id = h;
+        pair->id = h + 1;
         pair->strength = connection_strength(&hotspots[h], x, y);
     }
 
@@ -186,7 +220,7 @@ int user_connection(double x, double y)
 
     /* Iterate over the hotspots in order of descending strength */
     for (h = num_hotspots - 1; h >= 0; h--) {
-        int id = strengths[h].id;
+        int id = strengths[h].id - 1;
 
         if (strengths[h].strength < min_connection_strength) {
             return -1; /* Signifying a failure to connect to the network */
@@ -194,8 +228,10 @@ int user_connection(double x, double y)
             HotSpot *h = &hotspots[id];
             ++h->current_users;
 
-            transfer[HOTSPOT_ID] = id;
+            transfer[HOTSPOT_ID] = id + 1;
             event_schedule(sim_time + expon(hotspots[id].stay_time, STREAM_DEPARTURE), EVENT_DEPARTURE); 
+
+            return id + 1;
         }
     }
 
@@ -203,29 +239,64 @@ int user_connection(double x, double y)
 }
 
 
-void global_user_arrival_handler(double x, double y)
+void arrival_event_handler(double x, double y)
 {
     int connected_id;
-    // get (x, y)
-    // Schedule another user arrival event globally
     connected_id = user_connection(x, y);
+
+    ++attempted_connections;
+    set_user_connection_status(x, y, connected_id > 0);
+    if (connected_id > 0) {
+        ++successful_connections;
+    }
 }
+
+
+void global_user_arrival_handler(double x, double y)
+{
+    Point p;
+    float f;
+
+    arrival_event_handler(x, y);
+
+    // Schedule another user arrival event globally
+    p = generate_random_coordinate();
+    transfer[ARRIVAL_X] = p.x;
+    transfer[ARRIVAL_Y] = p.y;
+    f = expon(global_interarrival, STREAM_GLOBAL);
+    event_schedule(sim_time + f, EVENT_GLOBAL_ARRIVAL);    
+}
+
 
 void local_user_arrival_handler(int hotspot_id, double x, double y) 
 {
-  
+    Point p;
+    float f;
+
+    arrival_event_handler(x, y);
+
+    p = generate_coordinate_near_hotspot(hotspot_id);
+    transfer[ARRIVAL_X] = p.x;
+    transfer[ARRIVAL_Y] = p.y;
+    transfer[HOTSPOT_ID] = hotspot_id;
+
+    f = expon(global_interarrival, STREAM_GLOBAL);
+
+    event_schedule(sim_time + f, EVENT_HOTSPOT_ARRIVAL);   
 }
 
 
 void user_leaving_handler(int hotspot_id)
 {
-    --hotspots[hotspot_id].current_users;
+    --hotspots[hotspot_id - 1].current_users;
 }
 
 
 void end_simulation()
 {
-    
+    if (fprintf(outfile, "Connection Chance: %f\n", (float)successful_connections / attempted_connections) < 0) {
+        cleanup_on_error("Error writing to output file!");
+    }
 }
 
 
@@ -291,38 +362,40 @@ void readFile()
 
 int main()
 {
-  readFile();
+    bool done = false;
+    
+    readFile();
 
-  // print_all_hotspots();
-  initial_setup();
+    initial_setup();
 
-  maxatr = 6; 
+    maxatr = 6; 
 
-  while (!event_list_empty()) {
+    while (!event_list_empty() && !done) {
+        timing();
+        // printf("%d\n", sim_time);
 
-    timing();
+        switch(next_event_type) {
+            case EVENT_GLOBAL_ARRIVAL:
+                global_user_arrival_handler(transfer[ARRIVAL_X], transfer[ARRIVAL_Y]);
+                break;
 
-    switch(next_event_type) {
-        case EVENT_GLOBAL_ARRIVAL:
-            global_user_arrival_handler(transfer[ARRIVAL_X], transfer[ARRIVAL_Y]);
-            break;
+            case EVENT_HOTSPOT_ARRIVAL:
+                local_user_arrival_handler(transfer[HOTSPOT_ID], transfer[ARRIVAL_X], transfer[ARRIVAL_Y]);
+                break;
 
-        case EVENT_HOTSPOT_ARRIVAL:
-            local_user_arrival_handler(transfer[HOTSPOT_ID], transfer[ARRIVAL_X], transfer[ARRIVAL_Y]);
-            break;
+            case EVENT_DEPARTURE:
+                user_leaving_handler(transfer[HOTSPOT_ID]);
+                break;
 
-        case EVENT_DEPARTURE:
-            user_leaving_handler(transfer[HOTSPOT_ID]);
-            break;
+            case EVENT_END_SIMULATION:
+                end_simulation();
+                done = true;
+                break;
+        }
 
-        case EVENT_END_SIMULATION:
-            end_simulation();
-            break;
     }
 
-  }
+    cleanup();
 
-  cleanup();
-
-  return 0;
+    return 0;
 }

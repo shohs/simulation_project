@@ -342,6 +342,7 @@ void timing()
 
 void event_schedule(float time_of_event, int type_of_event)
 {
+    // printf("Schedule at %d\n", time_of_event);
 
 /* Schedule an event at time event_time of type event_type.  If attributes
    beyond the first two (reserved for the event time and the event type) are
