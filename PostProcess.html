@@ -1,0 +1,50 @@
+<html>
+
+<head>
+
+<title>Steven Hohs, CS 535, Project #6</title>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute vec4 vPosition;
+attribute vec2 vTexCoord;
+
+varying vec2 fTexCoord;
+
+void main() 
+{
+  gl_Position = vPosition;
+  fTexCoord = vTexCoord;
+} 
+
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform sampler2D texture;
+varying vec2 fTexCoord;
+
+void main()
+{
+  vec4 color = texture2D(texture, fTexCoord);
+  gl_FragColor = color;
+}
+
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="PostProcess.js"></script>
+
+</head>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+</body>
+</html>

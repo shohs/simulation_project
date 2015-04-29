@@ -292,12 +292,14 @@ void end_simulation()
         cleanup_on_error("Error writing to output file!");
     }
 
+    
     for (int y = 0; y < y_size; y++) {
         for (int x = 0; x < x_size; x++) {
-            fprintf(outfile, "%.3f ", get_user_connection_percent(x, y));
+            fprintf(outfile, "%.3f, ", get_user_connection_percent(x, y));
         }
         fprintf(outfile, "\n");
     }
+
 }
 
 
