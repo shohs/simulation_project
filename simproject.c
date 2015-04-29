@@ -105,7 +105,7 @@ Point generate_random_coordinate() {
 
 Point generate_coordinate_near_hotspot(int id) {
     Point point;
-    HotSpot h = &hotspots[id];
+    HotSpot *h = &hotspots[id];
 
     float theta = uniform(0.0f, 2 * MATH_PI, STREAM_COORDINATE_GENERATION);
     float radius = uniform(0.0f, NEAR_RADIUS, STREAM_COORDINATE_GENERATION);
@@ -125,8 +125,8 @@ void initial_setup()
         p = generate_coordinate_near_hotspot(h);
         transfer[ARRIVAL_X] = p.x;
         transfer[ARRIVAL_Y] = p.y;
-        transfer[HOTSPOT_ID] = h;
-        event_schedule(sim_time + expon(hotspots[i].interarrival_time, getStream(hotspots[i].id), EVENT_HOTSPOT_ARRIVAL);   
+        transfer[HOTSPOT_ID] = hotspots[h].id;
+        event_schedule(sim_time + expon(hotspots[h].interarrival_time, getStream(hotspots[h].id)), EVENT_HOTSPOT_ARRIVAL);   
     }
 
     /* Schedule a global arrival event at random (x, y) */
@@ -156,9 +156,9 @@ double connection_strength(HotSpot *hotspot, double x, double y)
 }
 
 
-int strengthIdComparator(void *lhs, void *rhs)
+int strength_id_comparator(const void *lhs, const void *rhs)
 {
-    StrenthIdPair *lPair = lhs, *rPair = rhs;
+    const StrengthIdPair *lPair = lhs, *rPair = rhs;
     if (lPair->strength < rPair->strength) {
         return -1;
     } else if (lPair->strength > rPair->strength) {
@@ -171,7 +171,7 @@ int strengthIdComparator(void *lhs, void *rhs)
 
 int user_connection(double x, double y)
 {
-    StrengthIdPair hotspotStrengths[MAX_NUM_HOTSPOTS];
+    StrengthIdPair strengths[MAX_NUM_HOTSPOTS];
     int h;
     
     /* Calculate the strengths at (x, y) */
@@ -182,7 +182,7 @@ int user_connection(double x, double y)
     }
 
     /* Sort the StrengthIdPairs in ascending order */
-    qsort(strengths, num_hotspots, sizeof(*strengths), &strengthIdComparator);
+    qsort(strengths, num_hotspots, sizeof(*strengths), &strength_id_comparator);
 
     /* Iterate over the hotspots in order of descending strength */
     for (h = num_hotspots - 1; h >= 0; h--) {
@@ -220,6 +220,12 @@ void local_user_arrival_handler(int hotspot_id, double x, double y)
 void user_leaving_handler(int hotspot_id)
 {
     --hotspots[hotspot_id].current_users;
+}
+
+
+void end_simulation()
+{
+    
 }
 
 
@@ -282,25 +288,28 @@ void readFile()
     }
 }
 
+
 int main()
 {
   readFile();
 
   // print_all_hotspots();
-  initial_setup():
+  initial_setup();
 
   maxatr = 6; 
 
-  while (!event_list_empty) {
+  while (!event_list_empty()) {
+
+    timing();
 
     switch(next_event_type) {
         case EVENT_GLOBAL_ARRIVAL:
-          global_user_arrival_handler(transfer[X_ARRIVAL], transfer[Y_ARRIVAL]);
-          break;
+            global_user_arrival_handler(transfer[ARRIVAL_X], transfer[ARRIVAL_Y]);
+            break;
 
         case EVENT_HOTSPOT_ARRIVAL:
-          local_user_arrival_handler(transfer[HOTSPOT_ID], transfer[X_ARRIVAL], transfer[Y_ARRIVAL]);
-          break;
+            local_user_arrival_handler(transfer[HOTSPOT_ID], transfer[ARRIVAL_X], transfer[ARRIVAL_Y]);
+            break;
 
         case EVENT_DEPARTURE:
             user_leaving_handler(transfer[HOTSPOT_ID]);
