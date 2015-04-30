@@ -21,6 +21,8 @@
 #define EVENT_DEPARTURE         3
 #define EVENT_END_SIMULATION    4
 
+#define LIST_UTILIZATION 1
+
 #define STREAM_GLOBAL 1
 #define STREAM_DEPARTURE 2
 #define STREAM_COORDINATE_GENERATION 3
@@ -52,7 +54,7 @@ typedef struct StrengthIdPair {
 } StrengthIdPair;
 
 
-FILE *infile = NULL, *outfile = NULL;
+FILE *infile = NULL, *outfile = NULL, *heatmapfile = NULL;
 
 #define MAX_NUM_HOTSPOTS 100
 #define STRENGTH_COEFFICIENT 1.0
@@ -246,6 +248,7 @@ void arrival_event_handler(double x, double y)
     set_user_connection_status(x, y, connected_id >= 0);
     if (connected_id >= 0) {
         ++successful_connections;
+        list_file(FIRST, LIST_UTILIZATION);
     }
 }
 
@@ -283,6 +286,7 @@ void local_user_arrival_handler(int hotspot_id, double x, double y)
 void user_leaving_handler(int hotspot_id)
 {
     --hotspots[hotspot_id].current_users;
+    list_remove(FIRST, LIST_UTILIZATION);
 }
 
 
@@ -292,12 +296,25 @@ void end_simulation()
         cleanup_on_error("Error writing to output file!");
     }
 
+    if (fprintf(outfile, "Avg. Number of users: %f\n", filest(LIST_UTILIZATION)) < 0) {
+        cleanup_on_error("Error writing to output file!");
+    }
     
+
+    /* Write a javascript file with the data to generate the heatmap */
+    fprintf(heatmapfile, "var WIDTH = %d;\nvar HEIGHT = %d;\nvar texture = [\n", x_size, y_size);
     for (int y = 0; y < y_size; y++) {
         for (int x = 0; x < x_size; x++) {
-            fprintf(outfile, "%.3f, ", get_user_connection_percent(x, y));
+            if (fprintf(heatmapfile, "%.3f, ", get_user_connection_percent(x, y)) < 0) {
+                cleanup_on_error("Error writing to output file!");
+            }
         }
-        fprintf(outfile, "\n");
+        if (fprintf(heatmapfile, "\n") < 0) {
+            cleanup_on_error("Error writing to output file!");
+        }
+    }
+    if (fprintf(heatmapfile, "]\n") < 0) {
+        cleanup_on_error("Error writing to output file!");
     }
 
 }
@@ -337,6 +354,11 @@ void readFile()
     outfile = fopen("wifi.out", "w");
     if (!outfile) {
         cleanup_on_error("Unable to open \"wifi.out\"\n");
+    }
+
+    heatmapfile = fopen("heatmap.js", "w");
+    if (!heatmapfile) {
+        cleanup_on_error("Unable to open \"heatmap.js\"\n");
     }
 
     /* Read in global simulation configuration parameters */

@@ -8,3 +8,15 @@ Graphs
 To write in the report:
 Create some input / systems + pictures
 Map of campus for last system
+
+
+multi-hotspot systems:
+
+office
+
+4 routers of specific strengths?
+change configuration of routers
+
+airport?
+
+university?
