@@ -292,11 +292,22 @@ void user_leaving_handler(int hotspot_id)
 
 void end_simulation()
 {
+    float avg_num_users = filest(LIST_UTILIZATION);
+    int total_capacity = 0;
+    for (int i = 0; i < num_hotspots; i++) {
+        total_capacity += hotspots[i].capacity;
+    }
+    float utilization = (float)avg_num_users / total_capacity;
+
     if (fprintf(outfile, "Connection Chance: %f\n", (float)successful_connections / attempted_connections) < 0) {
         cleanup_on_error("Error writing to output file!");
     }
 
-    if (fprintf(outfile, "Avg. Number of users: %f\n", filest(LIST_UTILIZATION)) < 0) {
+    if (fprintf(outfile, "Avg. Number of users: %f\n", avg_num_users) < 0) {
+        cleanup_on_error("Error writing to output file!");
+    }
+
+    if (fprintf(outfile, "Avg. Utilization: %f\n", utilization) < 0) {
         cleanup_on_error("Error writing to output file!");
     }
     

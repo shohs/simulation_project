@@ -20,3 +20,266 @@ heatmap 5
 30 45 15.0 0.3 17.5 30
 54 10 20.0 1.0 17.5 45
 16 54 22.5 0.2 17.5 50
+
+
+
+
+~~~~ BEGIN OFFICE ~~~~
+System Parameters:
+150 100 6    1 60
+
+Routers:
+ 25 33  50.0 1 60 150
+125 66  50.0 1 60 150
+ 25 33 100.0 1 60 100
+125 66 100.0 1 60 100
+ 75 66 150.0 1 60  50
+ 75 33 150.0 1 60  50
+
+Test 1: Strongest Routers in middle, even spacing
+ 25 33  50.0 1 60 150
+125 66  50.0 1 60 150
+ 25 66 100.0 1 60 100
+125 33 100.0 1 60 100
+ 75 66 150.0 1 60  50
+ 75 33 150.0 1 60  50
+
+Connection Chance: 0.852448
+Avg. Number of users: 357.354492
+
+Test 2: Strongest Routers on edges, Weaker Routers in middle
+ 60 33  50.0 1 60 150
+ 90 66  50.0 1 60 150
+ 60 66 100.0 1 60 100
+ 90 33 100.0 1 60 100
+125 50 150.0 1 60  50
+ 25 50 150.0 1 60  50
+
+Connection Chance: 0.849940
+Avg. Number of users: 356.339996
+
+Test 3: Strong paired with weak
+ 25 33  50.0 1 60 150
+125 66  50.0 1 60 150
+ 75 66 100.0 1 60 100
+ 75 33 100.0 1 60 100
+125 33 150.0 1 60  50
+ 25 66 150.0 1 60  50
+
+ Connection Chance: 0.842225
+Avg. Number of users: 353.076813
+
+Test 4: Weak routers moved toward outside
+ 25 20  50.0 1 60 150
+125 80  50.0 1 60 150
+ 75 66 100.0 1 60 100
+ 75 33 100.0 1 60 100
+125 33 150.0 1 60  50
+ 25 66 150.0 1 60  50
+
+ Connection Chance: 0.846211
+Avg. Number of users: 354.785309
+
+Test 5: Strong routers moved toward center
+ 25 20  50.0 1 60 150
+125 80  50.0 1 60 150
+ 75 66 100.0 1 60 100
+ 75 33 100.0 1 60 100
+115 43 150.0 1 60  50
+ 35 56 150.0 1 60  50
+
+ Connection Chance: 0.850192
+Avg. Number of users: 356.455841
+
+Test 6: Move medium routers off to the side
+ 25 20  50.0 1 60 150
+125 80  50.0 1 60 150
+ 65 66 100.0 1 60 100
+ 85 33 100.0 1 60 100
+115 43 150.0 1 60  50
+ 35 56 150.0 1 60  50
+
+Connection Chance: 0.879526
+Avg. Number of users: 368.887634
+
+Test 7: Move small routers a little closer to center
+ 30 20  50.0 1 60 150
+120 80  50.0 1 60 150
+ 65 66 100.0 1 60 100
+ 85 33 100.0 1 60 100
+115 43 150.0 1 60  50
+ 35 56 150.0 1 60  50
+
+Connection Chance: 0.879489
+Avg. Number of users: 368.864868
+
+Test 8: Move small routers a little closer in
+ 30 22  50.0 1 60 150
+120 78  50.0 1 60 150
+ 65 66 100.0 1 60 100
+ 85 33 100.0 1 60 100
+115 43 150.0 1 60  50
+ 35 56 150.0 1 60  50
+
+Connection Chance: 0.879584
+Avg. Number of users: 368.906189
+
+Test 9: Move larger routers
+ 30 22  50.0 1 60 150
+120 78  50.0 1 60 150
+ 65 66 100.0 1 60 100
+ 85 33 100.0 1 60 100
+115 42 150.0 1 60  50
+ 35 58 150.0 1 60  50
+
+Connection Chance: 0.881865
+Avg. Number of users: 369.884094
+
+Varying interarrival time:
+0.1:
+Connection Chance: 0.142793
+Avg. Number of users: 599.439331
+Avg. Utilization: 0.999066
+
+0.2:
+Connection Chance: 0.284871
+Avg. Number of users: 596.494019
+Avg. Utilization: 0.994157
+
+0.3:
+Connection Chance: 0.424950
+Avg. Number of users: 592.328796
+Avg. Utilization: 0.987215
+
+0.4:
+Connection Chance: 0.555881
+Avg. Number of users: 581.335327
+Avg. Utilization: 0.968892
+
+0.5:
+Connection Chance: 0.646750
+Avg. Number of users: 540.170044
+Avg. Utilization: 0.900283
+
+0.75:
+Connection Chance: 0.802486
+Avg. Number of users: 449.701111
+Avg. Utilization: 0.749502
+
+1.0:
+Connection Chance: 0.881865
+Avg. Number of users: 369.884094
+Avg. Utilization: 0.616473
+
+1.25:
+Connection Chance: 0.907075
+Avg. Number of users: 304.256836
+Avg. Utilization: 0.507095
+
+1.50:
+Connection Chance: 0.928358
+Avg. Number of users: 259.140472
+Avg. Utilization: 0.431901
+
+1.75:
+Connection Chance: 0.945027
+Avg. Number of users: 226.563477
+Avg. Utilization: 0.377606
+
+2.0:
+Connection Chance: 0.954549
+Avg. Number of users: 200.066986
+Avg. Utilization: 0.333445
+
+2.5:
+Connection Chance: 0.960773
+Avg. Number of users: 160.744690
+Avg. Utilization: 0.267908
+
+3.0:
+Connection Chance: 0.960958
+Avg. Number of users: 133.650787
+Avg. Utilization: 0.222751
+
+
+Varying Connection Time:
+1:
+Connection Chance: 0.961081
+Avg. Number of users: 6.725384
+Avg. Utilization: 0.011209
+
+8:
+Connection Chance: 0.961081
+Avg. Number of users: 53.843197
+Avg. Utilization: 0.089739
+
+16:
+Connection Chance: 0.961081
+Avg. Number of users: 107.717293
+Avg. Utilization: 0.179529
+
+24:
+Connection Chance: 0.960645
+Avg. Number of users: 161.212631
+Avg. Utilization: 0.268688
+
+32:
+Connection Chance: 0.950556
+Avg. Number of users: 213.035294
+Avg. Utilization: 0.355059
+
+40:
+Connection Chance: 0.927756
+Avg. Number of users: 259.393402
+Avg. Utilization: 0.432322
+
+48:
+Connection Chance: 0.906332
+Avg. Number of users: 304.075012
+Avg. Utilization: 0.506792
+
+56:
+Connection Chance: 0.889532
+Avg. Number of users: 348.248474
+Avg. Utilization: 0.580414
+
+64:
+Connection Chance: 0.871852
+Avg. Number of users: 390.340637
+Avg. Utilization: 0.650568
+
+72:
+Connection Chance: 0.841573
+Avg. Number of users: 423.845795
+Avg. Utilization: 0.706410
+
+80:
+Connection Chance: 0.803352
+Avg. Number of users: 449.430725
+Avg. Utilization: 0.749051
+
+88:
+Connection Chance: 0.763402
+Avg. Number of users: 469.764069
+Avg. Utilization: 0.782940
+
+96:
+Connection Chance: 0.728258
+Avg. Number of users: 489.081757
+Avg. Utilization: 0.815136
+
+104:
+Connection Chance: 0.698646
+Avg. Number of users: 507.398865
+Avg. Utilization: 0.845665
+
+112:
+Connection Chance: 0.672368
+Avg. Number of users: 524.476929
+Avg. Utilization: 0.874128
+
+120:
+Connection Chance: 0.647932
+Avg. Number of users: 541.452576
+Avg. Utilization: 0.902421
+
